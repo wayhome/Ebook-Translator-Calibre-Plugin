@@ -5,6 +5,7 @@ import uuid
 
 from .. import EbookTranslator
 from ..lib.utils import request
+from ..lib.agent import TranslatorAgent
 from ..lib.exception import UnsupportedModel
 
 from .base import Base
@@ -67,6 +68,7 @@ class ChatgptTranslate(Base):
         self.temperature = self.config.get('temperature', self.temperature)
         self.top_p = self.config.get('top_p', self.top_p)
         self.stream = self.config.get('stream', self.stream)
+        self.agent = TranslatorAgent(api_key=self.api_key, endpoint=self.endpoint, model=self.model)
 
     def get_prompt(self):
         prompt = self.prompt.replace('<tlang>', self.target_lang)
@@ -123,6 +125,9 @@ class ChatgptTranslate(Base):
                 delta = json.loads(chunk)['choices'][0]['delta']
                 if 'content' in delta:
                     yield str(delta['content'])
+
+    def translate(self, text):
+        return self.agent.translate(self.source_lang, self.target_lang, text, "")
 
 
 class ChatgptBatchTranslate:
